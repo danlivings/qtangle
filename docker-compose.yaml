@@ -1,0 +1,27 @@
+version: "3"
+services:
+  qtangle:
+    build: "."
+    container_name: qtangle
+    environment:
+      QTANGLE__LOG: "info"
+      QTANGLE__QBITTORRENT__API_URL: "http://qbittorrent:9618"
+      QTANGLE__QBITTORRENT__PASSWORD: "password"
+      QTANGLE__QBITTORRENT__USERNAME: "username"
+    volumes:
+      - ./qtangle.toml:/app/qtangle.toml
+      - ./test/downloads:/downloads
+      - ./test/media:/app/media
+    depends_on:
+      - qbittorrent
+
+  # Wiremock is being used here for testing purposes.
+  # An actual qBittorrent container can be used as a drop-in replacement.
+  qbittorrent:
+    image: "wiremock/wiremock:latest"
+    container_name: wiremock
+    volumes:
+      - ./test/wiremock:/home/wiremock
+    environment:
+      WIREMOCK_OPTIONS: "--port 9618"
+    entrypoint: ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose"]

@@ -1,0 +1,16 @@
+[package]
+name = "qtangle"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+config = "0.15.18"
+qbit-rs = "0.4.7"
+tokio = { version = "1.47.1", features = ["full"] }
+url = "2.5.7"
+serde = { version = "1.0.228", features = ["derive"] }
+humantime-serde = "1.1.1"
+clap = { version = "4.5.49", features = ["derive"] }
+log = "0.4.28"
+env_logger = "0.11.8"

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/api/v2/auth/login"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Set-Cookie": "SID=hBc7TxF76ERhvIw0jQQ4LZ7Z1jQUV0tQ; path=/",
+      "Content-Length": "3"
+    }
+  }
+}

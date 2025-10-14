@@ -1,0 +1,23 @@
+[torrent]
+# How often to poll for torrent data.
+poll_interval = "15s"
+# Optional. Uncomment to only process torrents with the given tag.
+#filter_by_tag = "qtangle"
+
+[copy.target_folders]
+# The "*" key is an optional catch-all for untagged torrents. All other keys in this section are treated as user-defined
+# tags. The values correspond to a target folder.
+#
+# For example, using the below configuration:
+# - torrents tagged "tv" will be copied to "media/TV"
+# - torrents tagged "movie" will be copied to "media/Movies"
+# once the download is complete.
+#
+# If the below key is uncommented, then torrents that aren't tagged will be copied to "media/Untagged".
+#"*" = "media/Untagged"
+tv = "media/TV"
+movie = "media/Movies"
+
+[delete]
+# Optional. Remove torrents once they reach this seed ratio.
+seed_ratio = 1

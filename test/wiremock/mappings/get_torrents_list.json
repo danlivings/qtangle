@@ -1,0 +1,104 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "Processing torrents",
+      "requiredScenarioState": "Started",
+      "request": {
+        "method": "GET",
+        "url": "/api/v2/torrents/info?filter=completed"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": [
+          {
+            "tags": "TV",
+            "name": "Some TV show",
+            "hash": "0000000000000000000000000000000000000000",
+            "ratio": 1,
+            "save_path": "/downloads",
+            "content_path": "/downloads/Some TV show"
+          },
+          {
+            "tags": "Movie",
+            "name": "An Excellent Film (2025)",
+            "hash": "1111111111111111111111111111111111111111",
+            "ratio": 0.5,
+            "save_path": "/downloads",
+            "content_path": "/downloads/An Excellent Film (2025).mkv"
+          },
+          {
+            "name": "Linux ISO",
+            "hash": "2222222222222222222222222222222222222222",
+            "ratio": 1,
+            "save_path": "/downloads",
+            "content_path": "/downloads/Linux ISO.iso"
+          }
+        ]
+      }
+    },
+    {
+      "scenarioName": "Processing torrents",
+      "requiredScenarioState": "Copied",
+      "request": {
+        "method": "GET",
+        "url": "/api/v2/torrents/info?filter=completed"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": [
+          {
+            "tags": "TV,qtangle:copied",
+            "name": "Some TV show",
+            "hash": "0000000000000000000000000000000000000000",
+            "ratio": 1,
+            "save_path": "/downloads",
+            "content_path": "/downloads/Some TV show"
+          },
+          {
+            "tags": "Movie,qtangle:copied",
+            "name": "An Excellent Film (2025)",
+            "hash": "1111111111111111111111111111111111111111",
+            "ratio": 0.5,
+            "save_path": "/downloads",
+            "content_path": "/downloads/An Excellent Film (2025).mkv"
+          },
+          {
+            "name": "Linux ISO",
+            "hash": "2222222222222222222222222222222222222222",
+            "ratio": 1,
+            "save_path": "/downloads",
+            "content_path": "/downloads/Linux ISO.iso"
+          }
+        ]
+      }
+    },
+    {
+      "scenarioName": "Processing torrents",
+      "requiredScenarioState": "Deleted",
+      "request": {
+        "method": "GET",
+        "url": "/api/v2/torrents/info?filter=completed"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": [
+          {
+            "tags": "Movie,qtangle:copied",
+            "name": "An Excellent Film (2025)",
+            "hash": "1111111111111111111111111111111111111111",
+            "ratio": 0.5,
+            "save_path": "/downloads",
+            "content_path": "/downloads/An Excellent Film (2025).mkv"
+          },
+          {
+            "name": "Linux ISO",
+            "hash": "2222222222222222222222222222222222222222",
+            "ratio": 1,
+            "save_path": "/downloads",
+            "content_path": "/downloads/Linux ISO.iso"
+          }
+        ]
+      }
+    }
+  ]
+}

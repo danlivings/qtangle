@@ -1,0 +1,19 @@
+{
+  "scenarioName": "Processing torrents",
+  "request": {
+    "method": "POST",
+    "url": "/api/v2/torrents/delete",
+    "formParameters": {
+      "hashes": {
+        "matches": "(\\d)+"
+      },
+      "deleteFiles": {
+        "equalTo": "true"
+      }
+    }
+  },
+  "response": {
+    "status": 200
+  },
+  "newScenarioState": "Deleted"
+}

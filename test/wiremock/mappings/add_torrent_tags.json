@@ -1,0 +1,19 @@
+{
+  "scenarioName": "Processing torrents",
+  "request": {
+    "method": "POST",
+    "url": "/api/v2/torrents/addTags",
+    "formParameters": {
+      "hashes": {
+        "matches": "(\\d)+"
+      },
+      "tags": {
+        "equalTo": "qtangle:copied"
+      }
+    }
+  },
+  "response": {
+    "status": 200
+  },
+  "newScenarioState": "Copied"
+}
