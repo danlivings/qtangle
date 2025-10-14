@@ -10,8 +10,7 @@ Qtangle is intended to be used as a Docker container alongside a qBittorrent ins
 version: "3"
 services:
   qtangle:
-    build: "."
-    # image: qtangle
+    image: ghcr.io/danlivings/qtangle:main
     container_name: qtangle
     environment:
       QTANGLE__LOG: "info"
