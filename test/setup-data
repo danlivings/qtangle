@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+BASE_DIR="$(dirname "$(realpath $0)")"
+
+rm -r "$BASE_DIR/downloads"
+rm -r "$BASE_DIR/media"
+
+mkdir -p "$BASE_DIR/downloads/Some TV show"
+mkdir -p "$BASE_DIR/media"
+
+truncate -s 1500M "$BASE_DIR/downloads/An Excellent Film (2025).mkv"
+truncate -s 1000M "$BASE_DIR/downloads/Linux ISO.iso"
+
+for s in $(seq -f "%02g" 1 12); do
+  for e in $(seq -f "%02g" 1 8); do
+    truncate -s 350M "$BASE_DIR/downloads/Some TV show/S${s}E${e}.mkv"
+  done
+done
