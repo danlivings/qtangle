@@ -1,16 +1,30 @@
 use anyhow::Context;
 use log::{debug, error};
-use std::io::Error;
 use std::path::{Path, PathBuf};
 use tokio::task::JoinHandle;
 
+pub async fn hardlink_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> anyhow::Result<()> {
+    process_all(src, dst, CopyMode::Hardlink).await
+}
+
 pub async fn copy_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> anyhow::Result<()> {
+    process_all(src, dst, CopyMode::Copy).await
+}
+
+#[derive(Clone)]
+enum CopyMode {
+    Hardlink,
+    Copy,
+}
+
+async fn process_all(src: impl AsRef<Path>, dst: impl AsRef<Path>, mode: CopyMode) -> anyhow::Result<()> {
     let all_paths = get_all_paths(&src).await?;
 
     let mut handles = Vec::new();
     for path in all_paths {
         let src = src.as_ref().to_path_buf();
         let dst = dst.as_ref().to_path_buf();
+        let mode = mode.clone();
         let handle: JoinHandle<anyhow::Result<()>> = tokio::spawn(async move {
             let relative_path = path.strip_prefix(&src)?;
 
@@ -23,9 +37,18 @@ pub async fn copy_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> anyhow::R
             let target_path_parent = target_path.parent().context("Could not get parent dir")?;
             tokio::fs::create_dir_all(target_path_parent).await?;
 
-            debug!("Copying {:?} to {:?}", relative_path, target_path);
+            let result = match mode {
+                CopyMode::Hardlink => {
+                    debug!("Creating hardlink from {:?} to {:?}", path, target_path);
+                    tokio::fs::hard_link(&path, &target_path).await
+                },
+                CopyMode::Copy => {
+                    debug!("Copying {:?} to {:?}", path, target_path);
+                    tokio::fs::copy(&path, &target_path).await.map(|_| ())
+                }
+            };
 
-            match tokio::fs::copy(path, &target_path).await {
+            match result {
                 Ok(_) => {}
                 Err(err) => {
                     error!("{}: {}", target_path.display(), err);

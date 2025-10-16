@@ -1,4 +1,4 @@
-use crate::fs::copy_all;
+use crate::fs::{copy_all, hardlink_all};
 use crate::settings::QTangleSettings;
 use crate::traits::TorrentExt;
 use anyhow::Context;
@@ -253,7 +253,12 @@ impl<'s> ProductionEngine<'s> {
         let to = Path::new(target_path.as_ref()).join(from.strip_prefix(&save_path)?);
 
         info!("Copying {:?} to {:?}", from, to);
-        copy_all(&from, &to).await?;
+
+        if self.settings.copy.make_hardlinks {
+            hardlink_all(&from, &to).await?;
+        } else {
+            copy_all(&from, &to).await?;
+        }
 
         let hash = torrent.hash()?;
         let new_tags = vec!["qtangle:copied".to_string()];

@@ -20,6 +20,7 @@ pub struct TorrentSettings<'s> {
 
 #[derive(Debug, Deserialize)]
 pub struct CopySettings<'s> {
+    pub make_hardlinks: bool,
     pub target_folders: HashMap<Cow<'s, str>, Cow<'s, str>>,
 }
 
