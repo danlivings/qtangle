@@ -10,8 +10,13 @@ services:
       QTANGLE__QBITTORRENT__USERNAME: "username"
     volumes:
       - ./qtangle.toml:/app/qtangle.toml
-      - ./test/downloads:/downloads
-      - ./test/media:/app/media
+      - ./test/qtangle:/qtangle
+    # Setup the internal environment for testing.
+    # This shouldn't be needed for production use.
+    command:
+      - "sh"
+      - "-c"
+      - "ln -s /qtangle/downloads /downloads && ln -s /qtangle/media /app/media && ./qtangle"
     depends_on:
       - qbittorrent
 

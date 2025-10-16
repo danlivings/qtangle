@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BASE_DIR="$(dirname "$(realpath $0)")"
+BASE_DIR="$(dirname "$(realpath $0)")/qtangle"
 
 rm -r "$BASE_DIR/downloads"
 rm -r "$BASE_DIR/media"
