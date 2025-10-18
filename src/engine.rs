@@ -255,9 +255,9 @@ impl<'s> ProductionEngine<'s> {
         info!("Copying {:?} to {:?}", from, to);
 
         if self.settings.copy.make_hardlinks {
-            hardlink_all(&from, &to).await?;
+            hardlink_all(&from, &to, self.settings.copy.max_concurrency).await?;
         } else {
-            copy_all(&from, &to).await?;
+            copy_all(&from, &to, self.settings.copy.max_concurrency).await?;
         }
 
         let hash = torrent.hash()?;

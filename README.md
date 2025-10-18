@@ -40,6 +40,13 @@ poll_interval = "15s"
 # Optional. Uncomment to only process torrents with the given tag.
 #filter_by_tag = "qtangle"
 
+[copy]
+# When true, create a hardlink to the original location instead of copying for improved performance.
+# Requires both the source and target folders to use the same mount point.
+make_hardlinks = false
+# Optional. Sets maximum number of simultaneous filesystem operations to limit resource use.
+max_concurrency = 8
+
 [copy.target_folders]
 # The "*" key is an optional catch-all for untagged torrents. All other keys in this section are treated as user-defined
 # tags. The values correspond to a target folder.
