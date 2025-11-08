@@ -12,7 +12,7 @@ impl TorrentExt for Torrent {
     fn tags(&self) -> HashSet<String> {
         match &self.tags {
             None => HashSet::new(),
-            Some(tags) => tags.split(",").map(|s| s.to_lowercase()).collect(),
+            Some(tags) => tags.split(",").map(|s| s.trim().to_lowercase()).collect(),
         }
     }
 
