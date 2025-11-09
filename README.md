@@ -65,6 +65,10 @@ movie = "media/Movies"
 # Optional. Remove torrents once they reach this seed ratio.
 seed_ratio = 1
 
+[open_telemetry]
+# Optional. Allows exporting of metrics to the given endpoint via OTLP.
+endpoint = "http://prometheus:9090/api/v1/otlp/v1/metrics"
+
 [qbittorrent]
 # The base URL of your qBittorrent instance.
 api_url = "http://qbittorrent:9618"
@@ -94,3 +98,23 @@ You will need Rust version 1.85.0 or higher. `cargo` can be used to build and ru
 ```shell
 $ cargo run -- --dry-run
 ```
+
+## OpenTelemetry
+
+Qtangle optionally provides OpenTelemetry support over [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/). This
+can be enabled by providing a collector endpoint URL for the `open-telemetry.endpoint` configuration option.
+
+The following metrics are currently provided:
+
+| Name                           | Description                                                                                     | Type          |
+|--------------------------------|-------------------------------------------------------------------------------------------------|---------------|
+| `config.polling_interval`      | How often Qtangle will poll the QBittorrent API.                                                | Gauge         |
+| `config.max_concurrency`       | The maximum number of simultaneous filesystem operations Qtangle will perform.                  | Gauge         |
+| `config.seed_ratio`            | The maximum seed ratio before Qtangle will instruct QBittorrent to delete a torrent.            | Gauge         |
+| `engine.torrents_completed`    | The number of torrents that have finished downloading and are ready to be processed by Qtangle. | Gauge         |
+| `engine.torrents_processed`    | The total number of torrents that Qtangle has processed.                                        | Counter       |
+| `engine.torrents_deleted`      | The total number of torrents that Qtangle has deleted after hitting the maximum seed ratio.     | Counter       |
+| `engine.bytes_copied`          | The total number of bytes that Qtangle has copied.                                              | Counter       |
+| `engine.filesystem_operations` | The number of filesystem operations currently being performed.                                  | UpDownCounter |
+| `engine.filesystem_successes`  | The total number of filesystem operations that have succeeded.                                  | Counter       |
+| `engine.filesystem_errors`     | The total number of errors Qtangle has encountered while performing filesystem operations.      | Counter       |

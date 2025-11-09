@@ -1,3 +1,4 @@
+use crate::metrics;
 use crate::utils::chunk;
 use anyhow::Context;
 use log::{debug, error};
@@ -24,6 +25,15 @@ pub async fn copy_all(
 enum CopyMode {
     Hardlink,
     Copy,
+}
+
+impl CopyMode {
+    fn task_type(&self) -> &str {
+        match self {
+            Self::Hardlink => "hardlink",
+            Self::Copy => "copy",
+        }
+    }
 }
 
 async fn process_all(
@@ -60,21 +70,27 @@ async fn process_all(
                     target_path.parent().context("Could not get parent dir")?;
                 tokio::fs::create_dir_all(target_path_parent).await?;
 
+                metrics::increment_metric_filesystem_operations(mode.task_type());
                 let result = match mode {
                     CopyMode::Hardlink => {
                         debug!("Creating hardlink from {:?} to {:?}", path, target_path);
-                        tokio::fs::hard_link(&path, &target_path).await
+                        tokio::fs::hard_link(&path, &target_path).await.map(|_| 0)
                     }
                     CopyMode::Copy => {
                         debug!("Copying {:?} to {:?}", path, target_path);
-                        tokio::fs::copy(&path, &target_path).await.map(|_| ())
+                        tokio::fs::copy(&path, &target_path).await
                     }
                 };
+                metrics::decrement_metric_filesystem_operations(mode.task_type());
 
                 match result {
-                    Ok(_) => {}
+                    Ok(bytes) => {
+                        metrics::add_metric_bytes_copied(bytes);
+                        metrics::increment_metric_filesystem_successes(mode.task_type());
+                    }
                     Err(err) => {
                         error!("{}: {}", target_path.display(), err);
+                        metrics::increment_metric_filesystem_errors(mode.task_type());
                         Err(err)?
                     }
                 };

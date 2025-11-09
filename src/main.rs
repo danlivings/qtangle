@@ -1,6 +1,8 @@
 use crate::engine::Engine;
 use clap::Parser;
 use env_logger::Builder;
+use log::info;
+use opentelemetry_otlp::{Protocol, WithExportConfig};
 use qbit_rs::Qbit;
 use qbit_rs::model::Credential;
 use settings::QTangleSettings;
@@ -8,6 +10,7 @@ use std::fmt::Debug;
 
 mod engine;
 mod fs;
+mod metrics;
 mod settings;
 mod traits;
 mod utils;
@@ -32,6 +35,23 @@ async fn main() -> anyhow::Result<()> {
         settings.qbittorrent.password.as_ref(),
     );
     let api = Qbit::new(settings.qbittorrent.api_url.as_ref(), credential);
+
+    if let Some(ref endpoint) = settings.open_telemetry.endpoint {
+        info!("Setting up OTLP exporter for collection at {}", endpoint);
+        let exporter = opentelemetry_otlp::MetricExporter::builder()
+            .with_http()
+            .with_protocol(Protocol::HttpBinary)
+            .with_endpoint(endpoint.as_ref())
+            .build()?;
+
+        let meter_provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
+            .with_periodic_exporter(exporter)
+            .build();
+
+        opentelemetry::global::set_meter_provider(meter_provider);
+    } else {
+        info!("OTLP exporter disabled");
+    }
 
     let engine = Engine::new(args.dry_run, api, settings);
 

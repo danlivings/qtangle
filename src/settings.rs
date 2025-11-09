@@ -31,12 +31,18 @@ pub struct DeleteSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct OpenTelemetrySettings<'s> {
+    pub endpoint: Option<Cow<'s, str>>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct QTangleSettings<'s> {
     #[serde(borrow)]
     pub qbittorrent: QBittorrentSettings<'s>,
     pub torrent: TorrentSettings<'s>,
     pub copy: CopySettings<'s>,
     pub delete: DeleteSettings,
+    pub open_telemetry: OpenTelemetrySettings<'s>,
 }
 
 impl QTangleSettings<'_> {

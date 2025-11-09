@@ -14,3 +14,6 @@ humantime-serde = "1.1.1"
 clap = { version = "4.5.49", features = ["derive"] }
 log = "0.4.28"
 env_logger = "0.11.8"
+opentelemetry-otlp = "0.31.0"
+opentelemetry_sdk = "0.31.0"
+opentelemetry = "0.31.0"

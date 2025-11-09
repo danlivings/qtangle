@@ -19,6 +19,7 @@ services:
       - "ln -s /qtangle/downloads /downloads && ln -s /qtangle/media /app/media && ./qtangle"
     depends_on:
       - qbittorrent
+      - prometheus
 
   # Wiremock is being used here for testing purposes.
   # An actual qBittorrent container can be used as a drop-in replacement.
@@ -30,3 +31,16 @@ services:
     environment:
       WIREMOCK_OPTIONS: "--port 9618"
     entrypoint: ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose"]
+
+  # Used to test OpenTelemetry is being correctly exported.
+  # This can be replaced with some other monitoring solution that supports the OpenTelemetry Protocol.
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./test/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-otlp-receiver"

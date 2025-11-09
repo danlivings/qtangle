@@ -28,3 +28,7 @@ movie = "media/Movies"
 [delete]
 # Optional. Remove torrents once they reach this seed ratio.
 seed_ratio = 1
+
+[open_telemetry]
+# Optional. Allows exporting of metrics to the given endpoint via OTLP.
+endpoint = "http://prometheus:9090/api/v1/otlp/v1/metrics"

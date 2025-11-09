@@ -1,4 +1,5 @@
 use crate::fs::{copy_all, hardlink_all};
+use crate::metrics;
 use crate::settings::QTangleSettings;
 use crate::traits::TorrentExt;
 use anyhow::Context;
@@ -6,6 +7,7 @@ use log::{error, info, warn};
 use qbit_rs::Qbit;
 use qbit_rs::model::{GetTorrentListArg, Torrent, TorrentFilter};
 use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 trait EngineCore {
@@ -28,6 +30,15 @@ trait EngineExt: EngineCore {
                 Some(seed_ratio) => max_seed_ratio <= seed_ratio,
             },
         }
+    }
+
+    fn guess_tag_and_target_path(&self, torrent: &Torrent) -> Option<(&Cow<str>, &Cow<str>)> {
+        let tags = torrent.tags();
+        self.settings()
+            .copy
+            .target_folders
+            .iter()
+            .find(|(tag, _)| tags.contains(&tag.to_lowercase()))
     }
 }
 
@@ -76,6 +87,14 @@ impl<'s> Engine<'s> {
     }
 
     async fn process_torrents(&self) -> anyhow::Result<()> {
+        metrics::set_metric_polling_interval(self.settings().torrent.poll_interval);
+        if let Some(max_concurrency) = self.settings().copy.max_concurrency {
+            metrics::set_metric_max_concurrency(max_concurrency);
+        }
+        if let Some(seed_ratio) = self.settings().delete.seed_ratio {
+            metrics::set_metric_seed_ratio(seed_ratio);
+        }
+
         let mut args = GetTorrentListArg::builder()
             .filter(TorrentFilter::Completed)
             .build();
@@ -88,6 +107,22 @@ impl<'s> Engine<'s> {
             .map(|s| s.to_string());
 
         let torrents = self.api().get_torrent_list(args).await?;
+
+        let torrent_counts_by_tag = torrents
+            .iter()
+            .map(|torrent| {
+                self.guess_tag_and_target_path(torrent)
+                    .unwrap_or((&Cow::Borrowed("*"), &Cow::Borrowed("")))
+                    .0
+            })
+            .fold(HashMap::new(), |mut acc, tag| {
+                acc.entry(tag).and_modify(|count| *count += 1).or_insert(1);
+                acc
+            });
+
+        for (tag, count) in torrent_counts_by_tag {
+            metrics::set_metric_torrents_completed(count, tag);
+        }
 
         for torrent in torrents {
             if !self.has_copied(&torrent) {
@@ -162,14 +197,7 @@ impl<'s> EngineCore for DryRunEngine<'s> {
     async fn complete(&self, torrent: &Torrent) -> anyhow::Result<()> {
         info!("{}", torrent.name());
 
-        let tags = torrent.tags();
-        if let Some((_, target_path)) = self
-            .settings
-            .copy
-            .target_folders
-            .iter()
-            .find(|(tag, _)| tags.contains(tag.as_ref()))
-        {
+        if let Some((_, target_path)) = self.guess_tag_and_target_path(torrent) {
             info!("- Copy from {:?} to {}", torrent.save_path, target_path);
         } else if let Some(target_path) = self.settings.copy.target_folders.get("*") {
             info!("- Copy from {:?} to {}", torrent.save_path, target_path);
@@ -202,17 +230,12 @@ impl<'s> EngineCore for ProductionEngine<'s> {
     }
 
     async fn complete(&self, torrent: &Torrent) -> anyhow::Result<()> {
-        let tags = torrent.tags();
-        if let Some((_, target_path)) = self
-            .settings
-            .copy
-            .target_folders
-            .iter()
-            .find(|(tag, _)| tags.contains(&tag.to_lowercase()))
-        {
+        if let Some((tag, target_path)) = self.guess_tag_and_target_path(torrent) {
             self.copy_torrent(torrent, target_path).await?;
+            metrics::increment_metric_torrents_processed(tag.as_ref());
         } else if let Some(target_path) = self.settings.copy.target_folders.get("*") {
             self.copy_torrent(torrent, target_path).await?;
+            metrics::increment_metric_torrents_processed("*");
         } else {
             warn!(
                 "Untagged torrent {} has no catch-all folder to be copied to!",
@@ -228,6 +251,12 @@ impl<'s> EngineCore for ProductionEngine<'s> {
 
         let hash = torrent.hash()?;
         self.api.delete_torrents(hash, Some(true)).await?;
+
+        if let Some((tag, _)) = self.guess_tag_and_target_path(torrent) {
+            metrics::increment_metric_torrents_processed(tag.as_ref());
+        } else {
+            metrics::increment_metric_torrents_deleted("*");
+        }
 
         Ok(())
     }
